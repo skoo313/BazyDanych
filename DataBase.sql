@@ -18,10 +18,7 @@ CREATE TABLE `albumy` (
 --  DODAWANIE ALBUMÓW
 --
 INSERT INTO albumy(albumy.nazwa, albumy.data, albumy.ocena)
-    VALUES ('Master of Puppets','1986-03-03',10), ('Black Sabbath','1970-02-13',10), ('Paranoid','1970-10-18',10);
-INSERT INTO albumy(albumy.nazwa, albumy.data)
-    VALUES('Exile on Main','1972-05-12'), ('The Pale Emperor', '2015-01-5');
-
+    VALUES ('Master of Puppets','1986-03-03',10), ('Black Sabbath','1970-02-13',10), ('Paranoid','1970-10-18',10),('Exile on Main','1972-05-12', NULL), ('The Pale Emperor', '2015-01-5', NULL);
 
 --
 --  TABELA UTWORÓW
@@ -30,7 +27,7 @@ DROP TABLE IF EXISTS `UTWORY`;
 CREATE TABLE `utwory` (
     `idu` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `nazwa` VARCHAR(50) NOT NULL,
-    `dlugosc` DECIMAL(5,2) NOT NULL,
+    `dlugosc` TIME NOT NULL,
     `ocena` TINYINT DEFAULT NULL,
     PRIMARY KEY(`idu`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -39,10 +36,7 @@ CREATE TABLE `utwory` (
 --  DODAWANIE UTWORÓW
 --
 INSERT INTO utwory(utwory.nazwa,  utwory.dlugosc, utwory.ocena)
-    VALUES('Battery', 5.12, 10),('The Thing That Should Not Be',6.36,6),('The Wizard', 4.24, 10),('The Mephistopheles Of Los Angeles', 4.58, 10);
-INSERT INTO utwory(utwory.nazwa, utwory.dlugosc)
-    VALUES('Rocks OFF', 4.33),('Rip This Joint',2.23), ('Iron Man', 5.56);
-
+    VALUES('Battery', '00:05:12', 10),('The Thing That Should Not Be','00:06:36',6),('The Wizard', '00:04:24', 10),('The Mephistopheles Of Los Angeles', '00:04:58', 10),('Rocks OFF', '00:04:33', NULL),('Rip This Joint','00:02:23',NULL), ('Iron Man', '00:05:56',NULL);
 
 
 --
@@ -51,9 +45,9 @@ INSERT INTO utwory(utwory.nazwa, utwory.dlugosc)
 DROP TABLE IF EXISTS `utwor_album`;
 CREATE TABLE `utwor_album` (
     `idua` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `a_id` int(10) unsigned DEFAULT NULL,
-    `u_id` int(10) unsigned DEFAULT NULL,
-    `numer` TINYINT DEFAULT NULL,
+    `a_id` int(10) unsigned NOT NULL,
+    `u_id` int(10) unsigned NOT NULL,
+    `numer` VARCHAR(5) NOT NULL,
     PRIMARY KEY(`idua`),
     FOREIGN KEY (`a_id`) REFERENCES `albumy`(`ida`) ON UPDATE CASCADE,
     FOREIGN KEY (`u_id`) REFERENCES `utwory`(`idu`) ON UPDATE CASCADE
@@ -86,6 +80,7 @@ CREATE TABLE `zespol` (
   `idz` int(10) unsigned NOT NULL,
   `nazwa` VARCHAR(50) NOT NULL,
   `data_utworzenia` DATE NOT NULL,
+  `data_rozwiazania` DATE DEFAULT NULL,
   PRIMARY KEY (`idz`),
   FOREIGN KEY (`idz`) REFERENCES `wykonawca` (`idw`) ON DELETE CASCADE ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -97,7 +92,7 @@ CREATE TABLE `zespol` (
 DROP TABLE IF EXISTS `muzyk`;
 CREATE TABLE `muzyk` (
   `idm` int(10) unsigned NOT NULL,
-  `imie` VARCHAR(50) NOT NULL,
+  `imie` VARCHAR(50) DEFAULT NULL,
   `nazwisko` VARCHAR(50) NOT NULL,
   `data_ur` DATE NOT NULL,
   `data_sm` DATE DEFAULT NULL,
@@ -105,6 +100,7 @@ CREATE TABLE `muzyk` (
   PRIMARY KEY (`idm`),
   FOREIGN KEY (`idm`) REFERENCES `wykonawca` (`idw`) ON DELETE CASCADE ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 --
 --  DODAWANIE ZESPOŁÓW I MUZYKÓW
@@ -114,7 +110,7 @@ INSERT INTO wykonawca VALUES ();
     INSERT INTO zespol(zespol.idz, zespol.nazwa,zespol.data_utworzenia) VALUES (@last_id, 'Metallica', '1981-10-28');
 INSERT INTO wykonawca VALUES (); 
     SET @last_id = LAST_INSERT_ID();
-    INSERT INTO zespol(zespol.idz, zespol.nazwa,zespol.data_utworzenia) VALUES (@last_id, 'Black Sabbath', '1968-01-01');
+    INSERT INTO zespol(zespol.idz, zespol.nazwa,zespol.data_utworzenia,zespol.data_rozwiazania) VALUES (@last_id, 'Black Sabbath', '1968-01-01','2017-02-04');
 INSERT INTO wykonawca VALUES (); 
     SET @last_id = LAST_INSERT_ID();
     INSERT INTO zespol(zespol.idz, zespol.nazwa,zespol.data_utworzenia) VALUES (@last_id, 'The Rolling Stones', '1962-07-12');
@@ -161,21 +157,22 @@ CREATE TABLE `nalezy`(
 --
 --  DODAWANIE MUZYKÓW do ZESPOŁÓW
 --
-INSERT INTO nalezy(nalezy.m_id,nalezy.z_id,nalezy.od) 
-    VALUES (5,2,'1968-01-01'), (10,5,'1983-01-01');
+
 INSERT INTO nalezy(nalezy.m_id,nalezy.z_id,nalezy.od, nalezy.do)
-	VALUES(6,1,'1982-12-28','1986-10-27'),(8,4,'1975-01-01','2015-01-01'),(10,1,'1982-01-01', '1983-01-01');
+	VALUES(6,1,'1982-12-28','1986-10-27'),(8,4,'1975-01-01','2015-01-01'),(10,1,'1982-01-01', '1983-01-01'), (5,2,'1968-01-01',NULL), (10,5,'1983-01-01',NULL);
 
 
 DROP TABLE IF EXISTS `wydanie`;
 CREATE TABLE `wydanie`(
     `id_wydanie` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `album_id` int(10) unsigned DEFAULT NULL,
-    `wykonawca_id` int(10) unsigned DEFAULT NULL,
+    `album_id` int(10) unsigned NOT NULL,
+    `wykonawca_id` int(10) unsigned NOT NULL,
     PRIMARY KEY(`id_wydanie`),
     FOREIGN KEY (`album_id`) REFERENCES `albumy`(`ida`) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (`wykonawca_id`) REFERENCES `wykonawca`(`idw`) ON DELETE CASCADE ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE UNIQUE INDEX ind_wydanie ON wydanie(album_id,wykonawca_id);
 
 INSERT INTO wydanie(wydanie.album_id,wydanie.wykonawca_id)
     VALUES (1,1),(2,2),(3,2),(4,3),(5,4);
