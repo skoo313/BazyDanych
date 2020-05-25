@@ -25,6 +25,8 @@ style.configure('Header.Label', font=('Arial', 30, 'bold'), foreground ='#D3D3D3
 style.configure('Normal.Label', font=('Arial', 15), foreground ='#A8A8A8', background=def_color)
 
 style.configure('TEntry', foreground="#D3D3D3", fieldbackground="#353535")
+
+style.configure('TCheckbutton', font=('Arial', 10),foreground ='#A8A8A8', background="#353535")
 #style.configure('Header', font = ('Arial',30), 'bold')
 
 def load_data(opt):
@@ -146,8 +148,9 @@ class AlbumDetails(tk.Frame):
         tk.Frame.__init__(self, master)
         self.frame = tk.Frame(width=700, height=500, background=def_color)
         self.frame.grid_propagate(0)
-        self.frame.grid(row=0, column=1)   
+        self.frame.grid(row=0, column=1) 
         self.frame.columnconfigure(0,weight=1)
+        self.frame.columnconfigure(1,weight=1)
         self.frame.grid_rowconfigure(0, weight=1)
         self.actual_id=str(data)
 
@@ -168,12 +171,15 @@ class AlbumDetails(tk.Frame):
         self.listBox.column("Numer",minwidth=0,width=50, stretch=NO)
         self.listBox.column("Dlugosc",minwidth=0,width=100,stretch=NO)
         self.listBox.column("Ocena",minwidth=0,width=50,stretch=NO)
+
         for col in cols:
            self.listBox.heading(col, text=col)  
-        self.listBox.grid(row=0, sticky=N+S, pady=50)
+        self.listBox.grid(row=0, sticky=N+S, pady=50, column=0)
     
         for (ida, nazwa, wykonawca, data) in rows:
            self.listBox.insert("", "end", values=(ida, nazwa, wykonawca, data))
+        ###
+
 
         self.detail = Button(self.frame,style = 'TButton', text="Back",  command=lambda: self.master.switch_frame(AlbumsPage)).grid(row=2)
 
@@ -201,8 +207,8 @@ class PerformerPage(tk.Frame):
         bez_albumu = tk.IntVar()
   
 
-        tk.Checkbutton(self.frame,background=def_color, text='Wykonawcy z albumami',font=("Arial",10),variable=z_albumem, onvalue=1, offvalue=0, command=self.print_selection(z_albumem,bez_albumu))  .grid(row=2,padx=10, pady=(10,5), sticky=E+W)
-        tk.Checkbutton(self.frame,background=def_color, text='Wykonawcy bez albumów',font=("Arial",10),variable=bez_albumu, onvalue=1, offvalue=0, command=self.print_selection(z_albumem,bez_albumu)).grid(row=3,padx=10, pady=(5,10),sticky=E+W)
+        Checkbutton(self.frame, text='Wykonawcy z albumami (przypisanymi do nich)',style='TCheckbutton',variable=z_albumem, onvalue=1, offvalue=0, command=self.print_selection(z_albumem,bez_albumu))  .grid(row=2,padx=10, pady=(10,5),stick=E+W)
+        Checkbutton(self.frame,text='Wykonawcy bez albumów (przypisanymi do nich)',style='TCheckbutton',variable=bez_albumu, onvalue=1, offvalue=0, command=self.print_selection(z_albumem,bez_albumu)).grid(row=3,padx=10, pady=(5,10),stick=E+W)
         
         self.detail = Button(self.frame,style = 'TButton', text="Pokaż",  command=lambda: self.print_selection(z_albumem,bez_albumu)).grid(row=4, padx=10, sticky=N) 
     
@@ -295,8 +301,10 @@ class EditPage(tk.Frame):
         rows=load_data(op)
         self.ItemsList=[[]]
         
-        for row in rows:
-           self.ItemsList+=[[str(row[0]),row[1]]]
+        for (ida, nazwa) in rows:
+            self.ItemsList+=[[ida,nazwa]]
+        #for row in rows:
+        #   self.ItemsList+=[[str(row[0]),row[1]]]
         self.item_choose = tk.StringVar(self)
         self.item_choose.set("Opcje")
         
@@ -327,12 +335,13 @@ class EditPage(tk.Frame):
         Label(self.bottom,background=def_color, text="Edytujesz: "+str(load_data(op),)).grid(row=2,columnspan=4)
         Label(self.bottom,style="Normal.Label", text = 'Nazwa:').grid(row=3,column=0,sticky=E)
         self.NameInput=Entry(self.bottom)
-        self.NameInput.grid(row=3,column=1,columnspan=3,sticky=E+W, padx=(25,0))
+        self.NameInput.grid(row=3,column=1,columnspan=3,sticky=E+W, padx=(25,0),pady=10)
         
-        Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=0, sticky='ew')
+        Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=3, sticky='sew')
+        
 
         if(self.option_choose.get()=="Album" or self.option_choose.get()=="Zespół"):
-            Label(self.bottom,style="Normal.Label",text = 'Data (yyyy-mm-dd)').grid(row=4,column=0,sticky=E)
+            Label(self.bottom,style="Normal.Label",text = 'Data (yyyy-mm-dd)').grid(row=4,column=0,sticky=E,pady=10)
            
             self.rok1 = Entry(self.bottom, width=4)
             self.rok1.grid(row=4,column=1,columnspan=3,padx=(25,0),sticky=W)
@@ -342,9 +351,10 @@ class EditPage(tk.Frame):
             Label(self.bottom,style="Normal.Label", text='-').grid(row=4,column=1,columnspan=3,padx=(90,0),sticky=W)
             self.dzien1 = Entry(self.bottom, width=2)
             self.dzien1.grid(row=4,column=1,columnspan=3,padx=(105,0),sticky=W)
-    
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=4, sticky='sew')
+        
         if(self.option_choose.get()=="Zespół"):
-            Label(self.bottom, style="Normal.Label", text = 'Data rozwiazania (yyyy-mm-dd)').grid(row=5,column=0,sticky=E)
+            Label(self.bottom, style="Normal.Label", text = 'Data rozwiazania (yyyy-mm-dd)').grid(row=5,column=0,sticky=E,pady=10)
             self.rok2 = Entry(self.bottom, width=4)
             self.rok2.grid(row=5,column=1,columnspan=3,padx=(25,0),sticky=W)
             Label(self.bottom,style="Normal.Label", text='-').grid(row=5,column=1,columnspan=3,padx=(55,0),sticky=W)
@@ -353,24 +363,78 @@ class EditPage(tk.Frame):
             Label(self.bottom, style="Normal.Label", text='-').grid(row=5,column=1,columnspan=3,padx=(90,0),sticky=W)
             self.dzien2 = Entry(self.bottom, width=2)
             self.dzien2.grid(row=5,column=1,columnspan=3,padx=(105,0),sticky=W)
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=5, sticky='sew')
 
         if(self.option_choose.get()=="Utwór"):
-            Label(self.bottom,style="Normal.Label",text = 'Długość').grid(row=4,column=0,sticky=E)
+            Label(self.bottom,style="Normal.Label",text = 'Długość').grid(row=4,column=0,sticky=E,pady=10)
 
             self.mm = Entry(self.bottom, width=4)
             self.mm.grid(row=4,column=1,columnspan=3,padx=(25,0),sticky=W)
             Label(self.bottom,style="Normal.Label", text='.').grid(row=4,column=1,columnspan=3,padx=(55,0),sticky=W)
             self.ss = Entry(self.bottom, width=2)
             self.ss.grid(row=4,column=1,columnspan=3,padx=(60,0),sticky=W)
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=4, sticky='sew')
 
         if(self.option_choose.get()=="Album" or self.option_choose.get()=="Utwór"):
-            Label(self.bottom, style="Normal.Label", text = 'Ocena').grid(row=5,column=0,sticky=E)
+            Label(self.bottom, style="Normal.Label", text = 'Ocena').grid(row=5,column=0,sticky=E,pady=10)
             self.OcenaInput=Entry(self.bottom)
             self.OcenaInput.grid(row=5,column=1,columnspan=3,sticky=W, padx=(25,0))
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=5, sticky='sew')
+
+        if(self.option_choose.get()=="Album"):
+            Label(self.bottom, style="Normal.Label", text = 'Przypisz do zespołu').grid(row=6,column=0,sticky=E,pady=10)  
+            z_op="SELECT idz,nazwa FROM zespol;"
+             
+            zrows=load_data(z_op)
+            self.ZList={-1:"---"}
+            
+            for (ida, nazwa) in zrows:
+                self.ZList[ida]=nazwa
+            
+            print(self.ZList)
+
+            self.itemz_choose = tk.StringVar(self)
+            self.idze=-1
+            self.optZ=OptionMenu(self.bottom, self.itemz_choose, *self.ZList.values(),style='TMenubutton', command=lambda _:self.change_option(self.itemz_choose))
+            self.optZ.grid(row=6,column=2,sticky=E+W,padx=(25,0)) 
+
+             
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=6, sticky='sew')
+
+        if(self.option_choose.get()=="Utwór"):
+            Label(self.bottom, style="Normal.Label", text = 'Przypisz do albumu').grid(row=6,column=0,sticky=E,pady=10)  
+            z_op="SELECT ida,nazwa FROM albumy;"
+             
+            zrows=load_data(z_op)
+            self.ZList={-1:"---"}
+            
+            for (ida, nazwa) in zrows:
+                self.ZList[ida]=nazwa
+            
+            print(self.ZList)
+
+            self.itemz_choose = tk.StringVar(self)
+            self.idze=-1
+            self.optZ=OptionMenu(self.bottom, self.itemz_choose, *self.ZList.values(),style='TMenubutton', command=lambda _:self.change_option(self.itemz_choose))
+            self.optZ.grid(row=6,column=2,sticky=E+W) 
+
+             
+            Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=6, sticky='sew')
 
         buttonCommit=Button(self.bottom,style = 'TButton',text="Commit", command=lambda: self.save_changes())
         buttonCommit.grid(row=8,column=0, columnspan=4, pady=15)
+    
+    def change_option(self, arg):
+
+        # selected element
+
         
+        print('     args:', arg)
+        print('var.get():', self.itemz_choose.get() )
+
+        self.idze = list(self.ZList.keys())[list(self.ZList.values()).index(self.itemz_choose.get())]
+
+
     def save_changes(self):
         print( self.idt)
         OK=True
@@ -411,6 +475,14 @@ class EditPage(tk.Frame):
             if(not ocena or int(ocena)>10 or int(ocena)<0):
                 ocena="NULL"
 
+        if(self.option_choose.get()=="Album" and self.idze!=-1):
+            command="UPDATE wydanie SET wykonawca_id="+str(self.idze)+" WHERE album_id="+self.idt+";"
+            print(command)
+            cursor.execute(command)
+            connection.commit()
+                
+
+
         print(OK)
 
         if(OK):
@@ -420,7 +492,7 @@ class EditPage(tk.Frame):
                 command="UPDATE utwory SET nazwa="+name+", dlugosc="+czas+", ocena="+ocena+" WHERE idu="+self.idt+";"
             elif(self.option_choose.get()=="Album"):
                 command="UPDATE albumy SET nazwa="+name+", data="+data+", ocena="+ocena+" WHERE ida="+self.idt+";"
-
+               
             print(command)
             cursor.execute(command)
             connection.commit()
