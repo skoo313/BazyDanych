@@ -887,14 +887,16 @@ class EditPage(tk.Frame):
         
 
      
-        name=self.NameInput.get()
+        name=""
         
         if(self.option_choose.get()!="Muzyk"):
+            name=self.NameInput.get()
             if(not name):
                 OK=False
             else:
                 name="'"+name+"'"
         else:
+            name=self.NameInputM.get()    
             if(not name):
                 name="NULL"
             else:
@@ -906,17 +908,22 @@ class EditPage(tk.Frame):
             else:
                 sname="'"+sname+"'"
 
+            rola= self.RoleInput.get()
+            if(not rola):
+                OK=False
+            else:
+                rola="'"+rola+"'"
 
         data=""
         data2=""
         czas=""
 
-        if(self.option_choose.get()=="Album" or self.option_choose.get()=="Zespół"):
+        if(self.option_choose.get()=="Album" or self.option_choose.get()=="Zespół" or self.option_choose.get()=="Muzyk"):
             if(not self.rok1.get() or not self.miesiac1.get() or int(self.miesiac1.get())<0 or int(self.miesiac1.get())>12 or not self.dzien1.get() or int(self.dzien1.get())<0 or int(self.dzien1.get())>31):
                 OK=False
             else:
                 data="('"+self.rok1.get()+"-"+self.miesiac1.get()+"-"+self.dzien1.get()+"')"
-        if(self.option_choose.get()=="Zespół"):
+        if(self.option_choose.get()=="Zespół" or self.option_choose.get()=="Muzyk"):
             if(not self.rok2.get() or not self.miesiac2.get() or int(self.miesiac2.get())<0 or int(self.miesiac2.get())>12 or not self.dzien2.get() or int(self.dzien2.get())<0 or int(self.dzien2.get())>31):    
                 data2="NULL"
             else:
@@ -985,6 +992,13 @@ class EditPage(tk.Frame):
                     command="SET @last_id = LAST_INSERT_ID();"
                     cursor.execute(command)
                     command="INSERT INTO zespol(zespol.idz, zespol.nazwa,zespol.data_utworzenia,zespol.data_rozwiazania) VALUES (@last_id," + name + "," + data + "," + data2 + ");"
+                elif(self.option_choose.get()=="Muzyk"):  
+                    command="INSERT INTO wykonawca VALUES ();"
+                    cursor.execute(command)
+                    connection.commit()
+                    command="SET @last_id = LAST_INSERT_ID();"
+                    cursor.execute(command)
+                    command="INSERT INTO muzyk(idm,imie,nazwisko,data_ur,data_sm,rola) VALUES (@last_id," + name + "," +sname +","+ data + "," + data2 + ","+rola+");"
                 elif(self.option_choose.get()=="Utwór"):
                     command="INSERT INTO utwory(utwory.nazwa,  utwory.dlugosc, utwory.ocena) VALUES("+name+","+ czas+","+ocena +");" 
                 elif(self.option_choose.get()=="Album"):
