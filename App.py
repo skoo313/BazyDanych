@@ -582,7 +582,8 @@ class EditPage(tk.Frame):
         print('     args:', arg)
         print('var.get():', self.opt_choose.get() )
         self.ido = list(self.OList.keys())[list(self.OList.values()).index(self.opt_choose.get())]
-
+        self.actual_id=str(self.ido)
+        print("TU ZMIENIASZ ", self.actual_id)
         self.item()
 
     def album_edit(self):
@@ -612,12 +613,7 @@ class EditPage(tk.Frame):
         Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=5, sticky='sew')
 
         #---------- PRZYPISANIE DO ZESPOŁU ----------
-        Label(self.bottom, style="Normal.Label", text = 'Przypisz do zespołu').grid(row=6,column=0,sticky=E,pady=10)  
-        self.idze=-1
-        self.r=6
-        self.choosen=[]
-        self.x('a',self.r)
-        Button(self.bottom,style = 'TButton',text="+",command=lambda: self.x('a',self.r)).grid(row=6,column=3,padx=10,sticky=E) 
+        Button(self.bottom, style = 'TButton', text="Przypisz do zespołu",command=lambda: self.multichoice_album()).grid(row=6, columnspan=4,pady=30, sticky=S)
         
         #---------- WYPEŁNIENIE PÓL (jeśli edytujemy) ----------
         if(int(self.idt)>0):
@@ -634,6 +630,106 @@ class EditPage(tk.Frame):
 
         buttonCommit=Button(self.bottom,style = 'TButton',text="Commit", command=lambda: self.save_changes())
         buttonCommit.grid(row=100,column=0, columnspan=4, pady=15) 
+
+    def multichoice_album(self):
+        for widget in self.bottom.winfo_children():
+            widget.destroy()
+        self.bottom = tk.Frame(self.CANV, bg=def_color)
+        self.bottom.grid(sticky="news",columnspan=10)
+        self.CANV.create_window((0, 0), window=self.bottom, anchor='nw')
+        # Add 9-by-5 buttons to the frame
+        # Update buttons frames idle tasks to let tkinter calculate buttons sizes
+  
+        # Set the self.CANV scrolling region
+        self.bottom.update_idletasks()
+        self.CANV.config(scrollregion=self.CANV.bbox("all"))
+        self.Fr.config(width=700, height=300)
+
+        col=['Id',"Nazwa"]
+        self.assigned = Treeview(self.bottom, columns=col, show='headings')
+        self.assigned.column("Id",minwidth=0,width=50, stretch=TRUE)
+
+        for c in col:
+           self.assigned.heading(c, text=c)
+
+        Label(self.bottom, style="Normal.Label", text = 'Aktualni wykonawcy').grid(row=1,columnspan=4,sticky=E+W,pady=10) 
+        self.assigned.grid(row=2,columnspan=4)
+
+        r=load_data('SELECT idz,nazwa FROM zespol JOIN wydanie ON wykonawca_id=idz where album_id='+self.actual_id+';')
+        for (ida, nazwa) in r:
+           self.assigned.insert("", "end", values=(ida, nazwa))
+         
+        self.idze=-1
+        self.r=2
+        self.choosen=[]
+        self.x('a',self.r)
+        Button(self.bottom, style = 'TButton', text="Usuń",command=lambda: self.delete_wydanie(self.assigned.item(self.assigned.selection())['values'][0])).grid(row=2,column=4,padx=10) 
+        Button(self.bottom,style = 'TButton',text="+",command=lambda: self.x('a',self.r)).grid(row=2,column=5,padx=10,sticky=E+S) 
+        buttonCommit=Button(self.bottom,style = 'TButton',text="Commit", command=lambda: self.save_changes_assign())
+        buttonCommit.grid(row=1,column=0, columnspan=4, pady=15, sticky=E+W) 
+    
+    def multichoice_piece(self):
+        for widget in self.bottom.winfo_children():
+            widget.destroy()
+        self.bottom = tk.Frame(self.CANV, bg=def_color)
+        self.bottom.grid(sticky="news",columnspan=10)
+        self.CANV.create_window((0, 0), window=self.bottom, anchor='nw')
+        # Add 9-by-5 buttons to the frame
+        # Update buttons frames idle tasks to let tkinter calculate buttons sizes
+  
+        # Set the self.CANV scrolling region
+        self.bottom.update_idletasks()
+        self.CANV.config(scrollregion=self.CANV.bbox("all"))
+        self.Fr.config(width=700, height=300)
+
+        col=['Id',"Nazwa"]
+        self.assigned = Treeview(self.bottom, columns=col, show='headings')
+        self.assigned.column("Id",minwidth=0,width=50, stretch=TRUE)
+
+        for c in col:
+           self.assigned.heading(c, text=c)
+
+        Label(self.bottom, style="Normal.Label", text = 'Aktualne albumy').grid(row=1,columnspan=4,sticky=E+W,pady=10) 
+        self.assigned.grid(row=2,columnspan=4)
+
+        r=load_data('SELECT ida,nazwa FROM albumy JOIN utwor_album on a_id=ida where u_id='+self.actual_id+';')
+        for (ida, nazwa) in r:
+           self.assigned.insert("", "end", values=(ida, nazwa))
+         
+        self.idze=-1
+        self.r=2
+        self.choosen=[]
+        self.x('u',self.r)
+        Button(self.bottom, style = 'TButton', text="Usuń",command=lambda: self.delete_utworalbum(self.assigned.item(self.assigned.selection())['values'][0])).grid(row=2,column=4,padx=10) 
+        Button(self.bottom,style = 'TButton',text="+",command=lambda: self.x('u',self.r)).grid(row=2,column=5,padx=10,sticky=E+S) 
+        buttonCommit=Button(self.bottom,style = 'TButton',text="Commit", command=lambda: self.save_changes_assign_piece())
+        buttonCommit.grid(row=1,column=0, columnspan=4, pady=15, sticky=E+W) 
+
+    def save_changes_assign(self):
+
+        print(self.choosen)
+            
+        for ids in self.choosen:
+            command="INSERT INTO wydanie(wydanie.album_id,wydanie.wykonawca_id) VALUES("+str(self.idt)+","+str(ids)+");"
+            print(command)
+            cursor.execute(command) 
+            connection.commit()
+        self.multichoice_album()
+
+    def save_changes_assign_piece(self):
+        print(self.choosen)
+
+        numbers=self.get_frame_inputs(self.bottom)
+        print(numbers)
+        for i in range(len(self.choosen)):
+            
+            if(numbers[i]!=''):
+                command="INSERT INTO utwor_album(a_id,u_id,numer) VALUES("+ str(self.choosen[i])+ ","+ str(self.idt) +"," + str(numbers[i]) +");"
+                print(command)
+                cursor.execute(command) 
+                connection.commit()
+        self.multichoice_piece()
+        
 
     def piece_edit(self):
 
@@ -659,16 +755,7 @@ class EditPage(tk.Frame):
         Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=5, sticky='sew')
 
         #---------- PRZYPISANIE DO ALBUMU ----------
-        Label(self.bottom, style="Normal.Label", text = 'Przypisz do albumu (nr, album)').grid(row=6,column=0,sticky=E,pady=10)  
-        self.idze=-1
-        self.choosen=[]
-        self.choosen_nr=[]
-        self.r=6
-        self.x('u',self.r)
-
-        Button(self.bottom,style = 'TButton',text="+",command=lambda: self.x('u',self.r)).grid(row=6,column=3,padx=10,sticky=E) 
-        
-        Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=6, sticky='sew')
+        Button(self.bottom, style = 'TButton', text="Przypisz do albumu",command=lambda: self.multichoice_piece()).grid(row=6, columnspan=4,pady=30, sticky=S)
         
         #---------- WYPEŁNIENIE PÓL (jeśli edytujemy) ----------
         if(int(self.idt)>0):
@@ -841,6 +928,23 @@ class EditPage(tk.Frame):
         elif(self.option_choose.get()=="Album"):
             self.album_edit()
 
+    def delete_wydanie(self, idd):
+        op="DELETE FROM wydanie WHERE wykonawca_id="+str(idd)+";"
+        cursor.execute(op)
+        connection.commit()
+
+        self.multichoice_album()
+    def delete_utworalbum(self, idd):
+        op="DELETE FROM utwor_album WHERE a_id="+str(idd)+";"
+        cursor.execute(op)
+        connection.commit()
+
+        self.multichoice_piece()
+
+    def get_frame_inputs(self,frame):
+        inputs = [frame.children[x].get() for x in frame.children if 'entry' in x]
+        return inputs
+
     #drop menu chooser function
     def x(self,op,r):
         if(op=='a'):
@@ -856,11 +960,11 @@ class EditPage(tk.Frame):
         
         self.itemz_choose = tk.StringVar(self)
         self.optZ=OptionMenu(self.bottom, self.itemz_choose, *self.ZList.values(),style='TMenubutton', command=lambda _:self.change_option(op,self.itemz_choose))
-        self.optZ.grid(row=r,column=2,sticky=W, padx=50)
+        self.optZ.grid(row=r,column=4,sticky=W+S, padx=50)
         
         if(op=='u'):
             self.nr = Entry(self.bottom, width=4)
-            self.nr.grid(row=r,column=2,padx=15,sticky=W)
+            self.nr.grid(row=r,column=4,padx=10, sticky=W+S)
         
         self.r+=1
         Separator(self.bottom, orient=HORIZONTAL).grid(column=0,columnspan=4, row=r, sticky='sew')
@@ -874,10 +978,8 @@ class EditPage(tk.Frame):
         print('var.get():', self.itemz_choose.get() )
 
         self.idze = list(self.ZList.keys())[list(self.ZList.values()).index(self.itemz_choose.get())]
-        if(op=='u'):
-            self.choosen.append([self.idze,self.nr.get()])
-        else:
-            self.choosen.append(self.idze)
+        
+        self.choosen.append(self.idze)
 
     def save_changes(self):
         print( self.idt)
@@ -943,26 +1045,8 @@ class EditPage(tk.Frame):
             if(not ocena or int(ocena)>10 or int(ocena)<0):
                 ocena="NULL"
 
-        if(self.option_choose.get()=="Album" and self.idze!=-1):
-
-            
-            print(self.choosen)
-            
-            for ids in self.choosen:
-                command="INSERT INTO wydanie(wydanie.album_id,wydanie.wykonawca_id) VALUES("+str(self.idt)+","+str(ids)+");"
-                print(command)
-                cursor.execute(command) 
-                connection.commit()
-
-        if(self.option_choose.get()=="Utwór" and self.idze!=-1):
-            #"INSERT INTO wydanie(wydanie.album_id,wydanie.wykonawca_id) VALUES("+str(self.idt)+","+str(self.idze)+") ON DUPLICATE KEY UPDATE wydanie.album_id="+str(self.idt)+",wydanie.wykonawca_id= "+str(self.idze)+";"
-
-            print(self.choosen)
-            for ids, num in self.choosen:
-                command="INSERT INTO utwor_album(a_id,u_id,numer) VALUES("+str(ids)+","+str(self.idt)+","+str(num)+");"
-                print(command)
-                cursor.execute(command)
-                connection.commit()        
+        
+       
 
 
         print(OK)
@@ -970,16 +1054,14 @@ class EditPage(tk.Frame):
         
         if(OK):
             if(self.ido>0):
-                if(self.option_choose.get()=="Zespół"):
+                if(self.option_choose.get()=="Zespół" or self.option_choose.get()=="Muzyk"):
                     checkifband="SELECT * FROM zespol WHERE idz="+self.idt+";"
                     cursor.execute(checkifband)
 
                     if not cursor.rowcount:
-                        command="UPDATE muzyk SET imie="+name+", nazwisko="+sname+", data_ur="+data+", data_sm="+data2+", rola="+role+" WHERE idm="+self.idt+";"
-                        print("ELO")
+                        command="UPDATE muzyk SET imie="+name+", nazwisko="+sname+", data_ur="+data+", data_sm="+data2+", rola="+rola+" WHERE idm="+self.idt+";"
                     else:
                         command="UPDATE zespol SET nazwa="+name+", data_utworzenia="+data+", data_rozwiazania="+data2+" WHERE idz="+self.idt+";"
-                
                 elif(self.option_choose.get()=="Utwór"):
                     command="UPDATE utwory SET nazwa="+name+", dlugosc="+czas+", ocena="+ocena+" WHERE idu="+self.idt+";"
                 elif(self.option_choose.get()=="Album"):
