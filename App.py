@@ -583,7 +583,7 @@ class EditPage(tk.Frame):
         print('var.get():', self.opt_choose.get() )
         self.ido = list(self.OList.keys())[list(self.OList.values()).index(self.opt_choose.get())]
         self.actual_id=str(self.ido)
-        print("TU ZMIENIASZ ", self.actual_id)
+        print("Act_id ", self.actual_id)
         self.item()
 
     def album_edit(self):
@@ -897,7 +897,7 @@ class EditPage(tk.Frame):
         buttonCommit.grid(row=10,column=0, columnspan=4, pady=15)
         
     def item(self,*args):
-        print("XD=>", end="")
+        print("=>", end="")
         print(self.option_choose.get())
 
         if(self.ido!=-1):
